@@ -18,6 +18,9 @@ export class MyScene extends CGFscene {
     this.initCameras();
     this.initLights();
 
+    var FPS = 20;
+
+
     //Background color
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -25,20 +28,26 @@ export class MyScene extends CGFscene {
     this.gl.enable(this.gl.DEPTH_TEST);
     this.gl.enable(this.gl.CULL_FACE);
     this.gl.depthFunc(this.gl.LEQUAL);
+    this.enableTextures(true);
+    this.setUpdatePeriod(FPS);
 
     //Initialize scene objects
     this.axis = new CGFaxis(this);
     this.plane = new MyPlane(this,30);
     //this.sphere = new MySphere(this, 50, 50, true);
     this.panorama = new MyPanorama(this, new CGFtexture(this, "images/panorama4.jpg"));
-    this.bird = new MyBird(this, 0, 0, 0);
+    this.bird = new MyBird(this, 0, 0, 0, 3, 0);
 
     //Objects connected to MyInterface
-    this.displayAxis = true;
+    this.displayAxis = false;
     this.scaleFactor = 1;
     this.selectedTexture = 0;
+    this.speedFactor = 1;
 
-    this.enableTextures(true);
+    var accelerate = false;
+    var turnLeft = false;
+
+
 
     this.appearanceEarth = new CGFappearance(this)
     this.appearanceEarth.setAmbient(0.1, 0.1, 0.1, 1);
@@ -81,7 +90,7 @@ export class MyScene extends CGFscene {
       1.0, //quando for tirar a screenshot, experimentar com diferentes valores deste parâmetro (FoV)
       0.1,
       1000,
-      vec3.fromValues(50, 10, 15), //50, 10, 15
+      vec3.fromValues(30, 20, 20), //50, 10, 15
       vec3.fromValues(0, 0, 0)
     );
   }
@@ -96,10 +105,57 @@ export class MyScene extends CGFscene {
     this.appearanceEarth.setTexture(this.textures[this.selectedTexture]);
   }
 
-    //Function that updates texture coordinates in MyQuad
-  /*updateTexCoords() {
-    this.sphere.updateTexCoords(this.texCoords);
-  }*/
+  update(t){
+    this.checkKeys();
+    this.bird.updateBirdMovement(t);
+  }
+
+
+  checkKeys() {
+		var text = "Keys pressed: ";
+		var keysPressed = false;
+    this.accelerate = false;
+    this.turnLeft = false;
+
+		// Check for key codes e.g. in ​https://keycode.info/
+		if (this.gui.isKeyPressed("KeyW")) {
+			text += " W ";
+      this.accelerate = true;
+      this.bird.accelerate(this.accelerate);
+			keysPressed = true;
+		}
+
+		if (this.gui.isKeyPressed("KeyS")) {
+			text += " S ";
+      this.accelerate = false;
+      this.bird.accelerate(this.accelerate);
+			keysPressed = true;
+		}
+    
+    if (this.gui.isKeyPressed("KeyA")) {
+			text += " A ";
+      this.turnLeft = true;
+      this.bird.turn(this.turnLeft)
+			keysPressed = true;
+		}
+
+    if (this.gui.isKeyPressed("KeyD")) {
+			text += " D ";
+      this.turnLeft = false;
+      this.bird.turn(this.turnLeft);
+			keysPressed = true;
+		}
+
+    if (this.gui.isKeyPressed("KeyR")) {
+			text += " R ";
+      this.bird.reset();
+			keysPressed = true;
+		}
+		
+		if (keysPressed){
+      console.log(text);
+    }
+	}
 
 
   display() {
@@ -123,13 +179,6 @@ export class MyScene extends CGFscene {
     if(this.displayPanorama){
       this.panorama.display();
     }
-
-
-    if(this.displayBird){
-      this.pushMatrix();
-      this.bird.display();
-      this.popMatrix();
-    }
     
 
     /*if (this.displaySphere){
@@ -147,6 +196,13 @@ export class MyScene extends CGFscene {
       this.plane.display();
       this.popMatrix();
   
+    }
+
+    if(this.displayBird){
+      this.pushMatrix();
+      this.scale(this.scaleFactor, this.scaleFactor, this.scaleFactor);
+      this.bird.display();
+      this.popMatrix();
     }
     
     // ---- END Primitive drawing section
