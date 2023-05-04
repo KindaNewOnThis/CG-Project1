@@ -190,7 +190,6 @@ export class MyScene extends CGFscene {
 
     // ---- BEGIN Primitive drawing section
 
-    }
 
     if(this.displayBird){
       this.pushMatrix();
